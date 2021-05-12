@@ -6,23 +6,30 @@ import {
   setUserLogoutState,
   selectUserEmail,
   selectUserName,
+  selectUserId
 } from "../features/userSlice";
 import './Login.css'
+import { Button } from 'reactstrap';
+import { useHistory } from "react-router-dom";
 
 function Login() {
   const dispatch = useDispatch();
+  let history = useHistory();
 
   const userName = useSelector(selectUserName);
   const userEmail = useSelector(selectUserEmail);
 
   const handleSignIn = () => {
     auth.signInWithPopup(provider).then((result) => {
+        console.log(result)
       dispatch(
         setActiveUser({
           userName: result.user.displayName,
           userEmail: result.user.email,
+          userId: result.user.uid
         })
       );
+      history.push('/welcome')
     });
   };
 
@@ -40,9 +47,9 @@ function Login() {
       <div className="welcome">
         <h1>Chef to the Rescue</h1>
         {userName ? (
-          <button onClick={handleSignOut}>Sign out</button>
+          <Button onClick={handleSignOut} color="danger" size="lg">Sign out</Button>
         ) : (
-          <button onClick={handleSignIn}>Sign In</button>
+          <Button onClick={handleSignIn} color="primary" size="lg">Sign In</Button>
         )}
       </div>
     </div>
