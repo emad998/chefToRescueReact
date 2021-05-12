@@ -1,44 +1,29 @@
 import React from 'react';
 import './App.css';
-import {auth, provider} from './firebase'
-import {useDispatch, useSelector} from 'react-redux'
-import {setActiveUser, setUserLogoutState, selectUserEmail, selectUserName} from './features/userSlice'
-
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+import Login from './components/Login'
 
 
 function App() {
-  const dispatch = useDispatch()
-
-  const userName = useSelector(selectUserName)
-  const userEmail = useSelector(selectUserEmail)
-
-  const handleSignIn = () => {
-    auth.signInWithPopup(provider).then((result) => {
-      dispatch(setActiveUser({
-        userName: result.user.displayName,
-        userEmail: result.user.email
-      }))
-    })
-  }
-
-  const handleSignOut = () => {
-    auth.signOut()
-    .then(() => {
-      dispatch(setUserLogoutState())
-    }).catch((err) => console.log(err.message))
-  }
 
   return (
     <div className="App">
       <header className="App-header">
-        {
-        userName ? (
-          <button onClick={handleSignOut}>Sign out</button>
-        ) : (
-          <button onClick={handleSignIn}>Sign In</button>
-        )
-        
-        }
+
+      <Router>
+     
+        <Switch>
+          <Route path="/">
+            <Login />
+          </Route>
+        </Switch>
+     
+    </Router>
 
       </header>
     </div>
