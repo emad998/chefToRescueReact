@@ -8,40 +8,41 @@ import {
   selectUserName,
   selectUserId,
 } from "../features/userSlice";
-import { useHistory, Link } from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import { db } from "../firebase";
+import { v4 as uuidv4 } from "uuid";
+import firebase from "firebase";
 import axios from "axios";
-import './Welcome.css'
-import {db} from '../firebase'
-import firebase from 'firebase'
 
-function Welcome() {
-  const [mealData, setMealData] = useState(null);
+function Favorites() {
+    const [mealData, setMealData] = useState(null)
+  const [yourLikes, setYourLikes] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [measures, setMeasures] = useState([])
   const [imageSrc, setImageSrc] = useState('')
   const [youtubeLink, setYoutubeLink] = useState('')
-  const [mealId, setMealId] = useState(null)
 
-  const [yourLikes, setYourLikes] = useState([])
-
-  const disptach = useDispatch();
+  const dispatch = useDispatch();
   let history = useHistory();
+  let docId = uuidv4();
 
   const userName = useSelector(selectUserName);
   const userEmail = useSelector(selectUserEmail);
 
-  const handleWelcomeSignOut = () => {
-    disptach(setUserLogoutState());
-    history.push("/");
-  };
+  //   read current likes
 
-  const mealGenerator = () => {
-    axios
-      .get("https://www.themealdb.com/api/json/v1/1/random.php")
-      .then((res) => {
-        console.log(res.data.meals[0])
-        setMealData(res);
-        let property = "";
+  db.collection("users")
+    .doc(userEmail)
+    .onSnapshot((doc) => {
+      // console.log("Current data: ", doc.data());
+      setYourLikes(doc.data().likes);
+    });
+
+  const handleShowMeal = (e, idOfMeal) => {
+    axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idOfMeal}`)
+    .then((res) => 
+    {setMealData(res)
+    let property = "";
         let ingredientsArray = [];
         let measuresArray = []
         for (property in res.data.meals[0]) {
@@ -63,40 +64,26 @@ function Welcome() {
         setMeasures(measuresArray)
         setImageSrc(res.data.meals[0].strMealThumb)
         setYoutubeLink(res.data.meals[0].strYoutube)
-      });
-  };
-
-
-//   read current likes
-
-db.collection("users").doc(userEmail)
-    .onSnapshot((doc) => {
-        // console.log("Current data: ", doc.data());
-        setYourLikes(doc.data().likes)
-    });
-
-
-
-const handleLike = (e, nameOfMeal, idOfMeal) => {
-    db.collection('users').doc(userEmail).update({
-        likes : firebase.firestore.FieldValue.arrayUnion({mealDatabaseName: nameOfMeal, mealDatabaseId: idOfMeal})
     })
-    
-}
-
-
+  };
 
   return (
     <div>
-      <h1>Welcome {userName}</h1>
-      <button onClick={handleWelcomeSignOut}>Sign Out</button>
-      <button onClick={mealGenerator}>Generate A meal</button>
-      <Link to="/favorites">Favorites</Link>
+      <h1>Welcome to Favorites</h1>
+      <h3>Your current Favorites</h3>
+    
+        {yourLikes &&
+          yourLikes.map((oneLike, index) => (
+            <div key={index}>
+                <h5>{oneLike.mealDatabaseName}</h5>
+                <button onClick={(e) => handleShowMeal(e, oneLike.mealDatabaseId)}>Show Meal</button>
+            </div>
+          ))}
 
-        
-      {mealData && (
+
+        {mealData &&
         <>
-          <h1 className='centeringText'>Meal Name: {mealData.data.meals[0].strMeal}</h1>
+        <h1 className='centeringText'>Meal Name: {mealData.data.meals[0].strMeal}</h1>
           <h1 className='centeringText'>Cuisine: {mealData.data.meals[0].strArea}</h1>
           <h1 className='centeringText'>Category: {mealData.data.meals[0].strCategory}</h1>
         
@@ -128,22 +115,10 @@ const handleLike = (e, nameOfMeal, idOfMeal) => {
         <p className="centeringText">
         <a href={youtubeLink} >Meal Video</a>
         </p>
-        
-        <button onClick={(e) => handleLike(e, mealData.data.meals[0].strMeal, mealData.data.meals[0].idMeal)}>Like</button>
-        
-        <h5>Your Likes: </h5>
-        <ul>
-        {
-            yourLikes && yourLikes.map((oneLike, index) => (
-                <li key={index}>{oneLike.mealDatabaseName}</li>
-            ))
-        }
-        </ul>
         </>
-      )}
-      
+        }
     </div>
   );
 }
 
-export default Welcome;
+export default Favorites;

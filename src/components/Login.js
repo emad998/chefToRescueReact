@@ -11,10 +11,15 @@ import {
 import './Login.css'
 import { Button } from 'reactstrap';
 import { useHistory } from "react-router-dom";
+import {db} from '../firebase'
+import { v4 as uuidv4 } from 'uuid';
+import firebase from 'firebase'
+
 
 function Login() {
   const dispatch = useDispatch();
   let history = useHistory();
+  let docId = uuidv4()
 
   const userName = useSelector(selectUserName);
   const userEmail = useSelector(selectUserEmail);
@@ -29,7 +34,35 @@ function Login() {
           userId: result.user.uid
         })
       );
-      history.push('/welcome')
+      let emails = []
+      db.collection("users").get().then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+            // doc.data() is never undefined for query doc snapshots
+            // console.log(doc.id, " => ", doc.data());
+            emails.push(doc.data().userDatabaseEmail)
+            
+
+        });
+        console.log(emails)
+        if(emails.includes(result.user.email)) {
+            history.push('/welcome')
+        } else {
+            db.collection("users").doc(result.user.email).set({
+            userDatabaseName: result.user.displayName,
+            userDatabaseEmail: result.user.email,
+            userDatabaseUid: result.user.uid,
+            // userDatabaseDocId: docId,
+            likes: [],
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+        history.push('/welcome')
+        console.log('success')
+        }
+    });
+
+    
+
+   
     });
   };
 

@@ -11,6 +11,7 @@ import {
   selectUserName,
 } from "./features/userSlice";
 import Welcome from "./components/Welcome";
+import Favorites from './components/Favorites'
 
 function App() {
   const dispatch = useDispatch();
@@ -28,6 +29,9 @@ function App() {
             <Switch>
               <Route path="/welcome">
                 <Welcome />
+              </Route>
+              <Route path="/favorites">
+                <Favorites />
               </Route>
               <Route path="/">
                 <Login />
