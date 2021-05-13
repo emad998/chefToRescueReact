@@ -8,7 +8,7 @@ import {
   selectUserName,
   selectUserId,
 } from "../features/userSlice";
-import { useHistory } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 import { db } from "../firebase";
 import { v4 as uuidv4 } from "uuid";
 import firebase from "firebase";
@@ -25,6 +25,7 @@ function Favorites() {
   const dispatch = useDispatch();
   let history = useHistory();
   let docId = uuidv4();
+  
 
   const userName = useSelector(selectUserName);
   const userEmail = useSelector(selectUserEmail);
@@ -67,16 +68,31 @@ function Favorites() {
     })
   };
 
+  const handleDeleteMeal = (e, nameOfMeal, idOfMeal) => {
+    db.collection('users').doc(userEmail).update({
+        likes: firebase.firestore.FieldValue.arrayRemove({mealDatabaseId: idOfMeal, mealDatabaseName: nameOfMeal})
+    })
+  }
+
+  const handleFavoritesSignOut = () => {
+    dispatch(setUserLogoutState());
+    history.push("/");
+  };
+
+
   return (
     <div>
       <h1>Welcome to Favorites</h1>
       <h3>Your current Favorites</h3>
+      <Link to="/welcome">Welcome Page</Link>
+      <button onClick={handleFavoritesSignOut}>SignOut</button>
     
         {yourLikes &&
           yourLikes.map((oneLike, index) => (
             <div key={index}>
                 <h5>{oneLike.mealDatabaseName}</h5>
                 <button onClick={(e) => handleShowMeal(e, oneLike.mealDatabaseId)}>Show Meal</button>
+                <button onClick={(e) => handleDeleteMeal(e, oneLike.mealDatabaseName, oneLike.mealDatabaseId)}>Delete Meal</button>
             </div>
           ))}
 
