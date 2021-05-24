@@ -82,7 +82,7 @@ function Login() {
         {userName ? (
           <Button onClick={handleSignOut} color="danger" size="lg">Sign out</Button>
         ) : (
-          <Button onClick={handleSignIn} color="primary" size="lg">Sign In</Button>
+          <Button onClick={handleSignIn} color="primary" size="lg">Google Sign In</Button>
         )}
       </div>
     </div>

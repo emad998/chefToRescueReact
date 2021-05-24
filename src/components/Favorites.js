@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, provider } from "../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -21,6 +21,7 @@ function Favorites() {
   const [measures, setMeasures] = useState([])
   const [imageSrc, setImageSrc] = useState('')
   const [youtubeLink, setYoutubeLink] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const dispatch = useDispatch();
   let history = useHistory();
@@ -32,12 +33,17 @@ function Favorites() {
 
   //   read current likes
 
-  db.collection("users")
+  useEffect(() => {
+    const unsubscribe = db.collection("users")
     .doc(userEmail)
     .onSnapshot((doc) => {
       // console.log("Current data: ", doc.data());
       setYourLikes(doc.data().likes);
     });
+    return unsubscribe
+  }, [deleting])
+
+  
 
   const handleShowMeal = (e, idOfMeal) => {
     axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idOfMeal}`)
@@ -72,6 +78,11 @@ function Favorites() {
     db.collection('users').doc(userEmail).update({
         likes: firebase.firestore.FieldValue.arrayRemove({mealDatabaseId: idOfMeal, mealDatabaseName: nameOfMeal})
     })
+    if (deleting == false) {
+      setDeleting(true)
+    } else if(deleting == true) {
+      setDeleting(false)
+    }
   }
 
   const handleFavoritesSignOut = () => {
@@ -116,10 +127,11 @@ function Favorites() {
 
           
           <h5>Measure</h5>
+          <h5>Measure</h5>
           <ul>
             {measures.map((measure, index) => {
              
-              if (measure) {
+              if (measure && measure != ' ') {
                 return <li key={index}>{measure}</li>;
               }
             })}

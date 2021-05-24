@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, provider } from "../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -23,6 +23,7 @@ function Welcome() {
   const [mealId, setMealId] = useState(null)
 
   const [yourLikes, setYourLikes] = useState([])
+  const [adding, setAdding] = useState(false)
 
   const disptach = useDispatch();
   let history = useHistory();
@@ -39,7 +40,7 @@ function Welcome() {
     axios
       .get("https://www.themealdb.com/api/json/v1/1/random.php")
       .then((res) => {
-        console.log(res.data.meals[0])
+        
         setMealData(res);
         let property = "";
         let ingredientsArray = [];
@@ -68,12 +69,17 @@ function Welcome() {
 
 
 //   read current likes
-
-db.collection("users").doc(userEmail)
+useEffect(() => {
+  const unsubscribe =  db.collection("users").doc(userEmail)
     .onSnapshot((doc) => {
         // console.log("Current data: ", doc.data());
         setYourLikes(doc.data().likes)
     });
+  return unsubscribe
+}, [adding])
+
+
+
 
 
 
@@ -81,6 +87,11 @@ const handleLike = (e, nameOfMeal, idOfMeal) => {
     db.collection('users').doc(userEmail).update({
         likes : firebase.firestore.FieldValue.arrayUnion({mealDatabaseName: nameOfMeal, mealDatabaseId: idOfMeal})
     })
+    if(adding == false) {
+      setAdding(true)
+    } else if (adding == true) {
+      setAdding(false)
+    }
     
 }
 
@@ -116,7 +127,7 @@ const handleLike = (e, nameOfMeal, idOfMeal) => {
           <ul>
             {measures.map((measure, index) => {
              
-              if (measure) {
+              if (measure && measure != ' ') {
                 return <li key={index}>{measure}</li>;
               }
             })}
